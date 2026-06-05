@@ -32,6 +32,18 @@ class IBodyMeasurementRepository(ABC):
         ...
 
     @abstractmethod
+    async def get_latest_for_patients(
+        self, patient_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, BodyMeasurement]:
+        """Retrieve the most recent measurement for a list of patients.
+
+        Returns:
+            A dictionary mapping patient_id to their latest BodyMeasurement.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, measurement: BodyMeasurement) -> BodyMeasurement:
         """Persist a new body measurement."""
         ...
+

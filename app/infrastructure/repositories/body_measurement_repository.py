@@ -33,6 +33,24 @@ class BodyMeasurementRepository(IBodyMeasurementRepository):
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
+    async def get_latest_for_patients(
+        self, patient_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, BodyMeasurement]:
+        if not patient_ids:
+            return {}
+
+        from sqlalchemy import desc
+        stmt = (
+            select(BodyMeasurementModel)
+            .where(BodyMeasurementModel.patient_id.in_(patient_ids))
+            .distinct(BodyMeasurementModel.patient_id)
+            .order_by(BodyMeasurementModel.patient_id, desc(BodyMeasurementModel.measured_at))
+        )
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+        return {m.patient_id: self._to_entity(m) for m in models}
+
+
     async def list_by_patient(
         self,
         patient_id: uuid.UUID,

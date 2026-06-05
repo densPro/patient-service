@@ -29,9 +29,16 @@ class SearchPatientsQuery:
                 offset=dto.offset,
             )
 
+            if patients:
+                patient_ids = [p.id for p in patients]
+                latest_measurements = await self._uow.measurements.get_latest_for_patients(patient_ids)
+                for p in patients:
+                    p.latest_measurement = latest_measurements.get(p.id)
+
             return PaginatedPatientsResponseDTO(
                 items=[_to_response(p) for p in patients],
                 total=total,
                 limit=dto.limit,
                 offset=dto.offset,
             )
+
