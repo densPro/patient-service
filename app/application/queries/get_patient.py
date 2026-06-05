@@ -26,6 +26,9 @@ class GetPatientQuery:
             patient = await self._uow.patients.get_by_id(patient_id)
             if patient is None:
                 raise PatientNotFoundError(str(patient_id))
+            patient.latest_measurement = await self._uow.measurements.get_latest_by_patient(
+                patient_id
+            )
             return _to_response(patient)
 
     async def by_mrn(self, mrn: str) -> PatientResponseDTO:
@@ -38,4 +41,7 @@ class GetPatientQuery:
             patient = await self._uow.patients.get_by_mrn(mrn)
             if patient is None:
                 raise PatientNotFoundError(mrn)
+            patient.latest_measurement = await self._uow.measurements.get_latest_by_patient(
+                patient.id
+            )
             return _to_response(patient)

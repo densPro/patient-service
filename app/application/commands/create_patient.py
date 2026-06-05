@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.application.dtos.body_measurement_dtos import BodyMeasurementResponseDTO
 from app.application.dtos.patient_create import PatientCreateDTO
 from app.application.dtos.patient_response import PatientResponseDTO
 from app.application.interfaces.unit_of_work import IUnitOfWork
@@ -110,9 +111,6 @@ class CreatePatientCommand:
                     emergency_contact=emergency_contact,
                     insurance_info=insurance_info,
                     notes=dto.notes,
-                    age=dto.age,
-                    height=dto.height,
-                    weight=dto.weight,
                 )
             except ValueError as exc:
                 raise InvalidPatientDataError(str(exc)) from exc
@@ -121,6 +119,24 @@ class CreatePatientCommand:
             await self._uow.commit()
 
             return _to_response(patient)
+
+
+def _measurement_to_dto(measurement) -> BodyMeasurementResponseDTO | None:
+    """Map an optional BodyMeasurement entity to a BodyMeasurementResponseDTO."""
+    if measurement is None:
+        return None
+    return BodyMeasurementResponseDTO(
+        id=measurement.id,
+        patient_id=measurement.patient_id,
+        measured_at=measurement.measured_at,
+        height_cm=measurement.height_cm,
+        weight_kg=measurement.weight_kg,
+        waist_cm=measurement.waist_cm,
+        hip_cm=measurement.hip_cm,
+        bmi=measurement.bmi,
+        bmi_category=measurement.bmi_category,
+        created_at=measurement.created_at,
+    )
 
 
 def _to_response(patient: Patient) -> PatientResponseDTO:
@@ -183,6 +199,7 @@ def _to_response(patient: Patient) -> PatientResponseDTO:
         marital_status=patient.marital_status,
         ssn_last_four=patient.ssn_last_four,
         national_id=patient.national_id,
+        age=patient.age,
         blood_type=patient.blood_type,
         allergies=patient.allergies,
         chronic_conditions=patient.chronic_conditions,
@@ -194,7 +211,5 @@ def _to_response(patient: Patient) -> PatientResponseDTO:
         status=patient.status,
         created_at=patient.created_at,
         updated_at=patient.updated_at,
-        age=patient.age,
-        height=patient.height,
-        weight=patient.weight,
+        latest_measurement=_measurement_to_dto(patient.latest_measurement),
     )

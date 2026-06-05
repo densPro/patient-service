@@ -119,9 +119,6 @@ class PatientRepository(IPatientRepository):
         model.date_of_birth = patient.date_of_birth
         model.gender = patient.gender.value
         model.marital_status = patient.marital_status.value
-        model.age = patient.age
-        model.height = patient.height
-        model.weight = patient.weight
         model.ssn_last_four = patient.ssn_last_four
         model.national_id = patient.national_id
         model.blood_type = patient.blood_type.value
@@ -185,9 +182,6 @@ class PatientRepository(IPatientRepository):
             insurance_info=insurance_info,
             notes=model.notes,
             status=PatientStatus(model.status),
-            age=model.age,
-            height=model.height,
-            weight=model.weight,
         )
 
     @staticmethod
@@ -220,7 +214,4 @@ class PatientRepository(IPatientRepository):
             status=patient.status.value,
             created_at=patient.created_at,
             updated_at=patient.updated_at,
-            age=patient.age,
-            height=patient.height,
-            weight=patient.weight,
         )

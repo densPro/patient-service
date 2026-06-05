@@ -34,9 +34,6 @@ class PatientUpdateDTO(BaseModel):
 
     ssn_last_four: str | None = Field(None, pattern=r"^\d{4}$")
     national_id: str | None = Field(None, max_length=50)
-    age: int | None = Field(None, ge=0)
-    height: float | None = Field(None, ge=0)
-    weight: float | None = Field(None, ge=0)
 
     blood_type: BloodType | None = None
     allergies: list[str] | None = None

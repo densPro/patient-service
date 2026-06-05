@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.infrastructure.database.session import engine
 from app.presentation.routers import health_router, patient_router
+from app.presentation.routers import body_measurement_router
 
 
 @asynccontextmanager
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     # --- Routers ---
     app.include_router(health_router.router)
     app.include_router(patient_router.router)
+    app.include_router(body_measurement_router.router)
 
     return app
 

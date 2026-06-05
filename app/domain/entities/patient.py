@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
+from typing import TYPE_CHECKING
 
 from app.domain.entities.base import AggregateRoot
 from app.domain.enums.blood_type import BloodType
@@ -15,6 +16,9 @@ from app.domain.value_objects.address import Address
 from app.domain.value_objects.contact_info import ContactInfo
 from app.domain.value_objects.emergency_contact import EmergencyContact
 from app.domain.value_objects.insurance_info import InsuranceInfo
+
+if TYPE_CHECKING:
+    from app.domain.entities.body_measurement import BodyMeasurement
 
 
 @dataclass
@@ -53,9 +57,9 @@ class Patient(AggregateRoot):
     date_of_birth: date | None = None
     gender: Gender = Gender.UNKNOWN
     marital_status: MaritalStatus = MaritalStatus.UNKNOWN
-    age: int | None = None
-    height: float | None = None
-    weight: float | None = None
+
+    # --- Body Measurements (denormalized — populated on read, not persisted here) ---
+    latest_measurement: BodyMeasurement | None = field(default=None, compare=False)
 
     # --- Identifiers ---
     ssn_last_four: str | None = None
@@ -102,9 +106,6 @@ class Patient(AggregateRoot):
         emergency_contact: EmergencyContact | None = None,
         insurance_info: InsuranceInfo | None = None,
         notes: str | None = None,
-        age: int | None = None,
-        height: float | None = None,
-        weight: float | None = None,
     ) -> Patient:
         """Create a new Patient with invariant checks.
 
@@ -147,9 +148,6 @@ class Patient(AggregateRoot):
             insurance_info=insurance_info,
             notes=notes,
             status=PatientStatus.ACTIVE,
-            age=age,
-            height=height,
-            weight=weight,
         )
 
     # ------------------------------------------------------------------
@@ -176,3 +174,15 @@ class Patient(AggregateRoot):
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def age(self) -> int | None:
+        """Compute age dynamically from date_of_birth."""
+        if self.date_of_birth is None:
+            return None
+        today = date.today()
+        return (
+            today.year
+            - self.date_of_birth.year
+            - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        )

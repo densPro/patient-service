@@ -67,9 +67,6 @@ class PatientCreateDTO(BaseModel):
     marital_status: MaritalStatus = MaritalStatus.UNKNOWN
     ssn_last_four: str | None = Field(None, pattern=r"^\d{4}$", examples=["1234"])
     national_id: str | None = Field(None, max_length=50)
-    age: int | None = Field(None, ge=0, examples=[30])
-    height: float | None = Field(None, ge=0, examples=[175.5])
-    weight: float | None = Field(None, ge=0, examples=[70.2])
 
     # Medical
     blood_type: BloodType = BloodType.UNKNOWN

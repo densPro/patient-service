@@ -12,6 +12,7 @@ from app.domain.enums.gender import Gender
 from app.domain.enums.marital_status import MaritalStatus
 from app.domain.enums.patient_status import PatientStatus
 
+from app.application.dtos.body_measurement_dtos import BodyMeasurementResponseDTO
 from app.application.dtos.patient_create import (
     AddressDTO,
     ContactInfoDTO,
@@ -41,8 +42,9 @@ class PatientResponseDTO(BaseModel):
     ssn_last_four: str | None = None
     national_id: str | None = None
     age: int | None = None
-    height: float | None = None
-    weight: float | None = None
+
+    # Latest measurement (denormalized for convenience)
+    latest_measurement: BodyMeasurementResponseDTO | None = None
 
     blood_type: BloodType
     allergies: list[str]

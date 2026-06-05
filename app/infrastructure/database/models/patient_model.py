@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import Date, DateTime, Index, String, Text, Integer, Float
+from sqlalchemy import Date, DateTime, Index, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -36,9 +36,6 @@ class PatientModel(Base):
     marital_status: Mapped[str] = mapped_column(
         String(30), nullable=False, default="unknown"
     )
-    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    height: Mapped[float | None] = mapped_column(Float, nullable=True)
-    weight: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # --- Identifiers ---
     ssn_last_four: Mapped[str | None] = mapped_column(String(4), nullable=True)

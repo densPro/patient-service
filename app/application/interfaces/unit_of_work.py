@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from types import TracebackType
 
+from app.application.interfaces.body_measurement_repository import IBodyMeasurementRepository
 from app.application.interfaces.patient_repository import IPatientRepository
 
 
@@ -21,6 +22,7 @@ class IUnitOfWork(ABC):
     """
 
     patients: IPatientRepository
+    measurements: IBodyMeasurementRepository
 
     @abstractmethod
     async def commit(self) -> None:
