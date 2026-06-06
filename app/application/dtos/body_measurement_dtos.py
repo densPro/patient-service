@@ -34,12 +34,17 @@ class BodyMeasurementResponseDTO(BaseModel):
     patient_id: uuid.UUID
     measured_at: datetime
     height_cm: float | None = None
+    height_m: float | None = None
     weight_kg: float | None = None
     waist_cm: float | None = None
     hip_cm: float | None = None
     bmi: float | None = None
     bmi_category: str | None = None
+    healthy_weight: float | None = None
+    minimum_weight: float | None = None
+    maximum_weight: float | None = None
     created_at: datetime
+
 
 
 class PaginatedMeasurementsResponseDTO(BaseModel):

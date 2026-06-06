@@ -92,10 +92,10 @@ class BodyMeasurement(AggregateRoot):
 
         Returns None if either height or weight is unavailable.
         """
-        if self.height_cm and self.weight_kg:
-            height_m = self.height_cm / 100.0
-            return round(self.weight_kg / (height_m ** 2), 2)
+        if self.height_m and self.weight_kg:
+            return round(self.weight_kg / (self.height_m ** 2), 2)
         return None
+
 
     @property
     def bmi_category(self) -> str | None:
@@ -110,3 +110,32 @@ class BodyMeasurement(AggregateRoot):
         if bmi < 30.0:
             return "Overweight"
         return "Obese"
+
+    @property
+    def height_m(self) -> float | None:
+        """Height in metres."""
+        if self.height_cm is not None:
+            return round(self.height_cm / 100.0, 2)
+        return None
+
+    @property
+    def healthy_weight(self) -> float | None:
+        """Healthy reference weight in kilograms based on height (BMI = 22.0)."""
+        if self.height_m:
+            return round((self.height_m ** 2) * 22.0, 1)
+        return None
+
+    @property
+    def minimum_weight(self) -> float | None:
+        """Minimum healthy weight in kilograms based on height (BMI = 18.5)."""
+        if self.height_m:
+            return round((self.height_m ** 2) * 18.5, 1)
+        return None
+
+    @property
+    def maximum_weight(self) -> float | None:
+        """Maximum healthy weight in kilograms based on height (BMI = 24.9)."""
+        if self.height_m:
+            return round((self.height_m ** 2) * 24.9, 1)
+        return None
+

@@ -54,10 +54,15 @@ class AddBodyMeasurementCommand:
                 patient_id=measurement.patient_id,
                 measured_at=measurement.measured_at,
                 height_cm=measurement.height_cm,
+                height_m=measurement.height_m,
                 weight_kg=measurement.weight_kg,
                 waist_cm=measurement.waist_cm,
                 hip_cm=measurement.hip_cm,
                 bmi=measurement.bmi,
                 bmi_category=measurement.bmi_category,
+                healthy_weight=measurement.healthy_weight,
+                minimum_weight=measurement.minimum_weight,
+                maximum_weight=measurement.maximum_weight,
                 created_at=measurement.created_at,
             )
+
