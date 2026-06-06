@@ -7,6 +7,7 @@ import uuid
 from app.application.dtos.body_measurement_dtos import (
     BodyMeasurementCreateDTO,
     BodyMeasurementResponseDTO,
+    TDEEResponseDTO,
 )
 from app.application.interfaces.unit_of_work import IUnitOfWork
 from app.domain.entities.body_measurement import BodyMeasurement
@@ -65,6 +66,8 @@ class AddBodyMeasurementCommand:
                 maximum_weight=measurement.maximum_weight,
                 bmr_harris_benedict=measurement.calculate_bmr_harris_benedict(patient.age, patient.gender.value) if patient.age is not None else None,
                 bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
+                tdee_harris_benedict=TDEEResponseDTO(**measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value) is not None else None,
+                tdee_mifflin_st_jeor=TDEEResponseDTO(**measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value) is not None else None,
                 created_at=measurement.created_at,
             )
 

@@ -163,3 +163,28 @@ class BodyMeasurement(AggregateRoot):
             return round((10.0 * self.weight_kg) + (6.25 * self.height_cm) - (5.0 * age) - 161.0, 2)
         return None
 
+    def calculate_tdee_harris_benedict(self, age: int, gender: str) -> dict[str, float] | None:
+        """Calculate TDEE for standard activity levels using Harris-Benedict BMR."""
+        bmr = self.calculate_bmr_harris_benedict(age, gender)
+        if bmr is None:
+            return None
+        return {
+            "sedentary": round(bmr * 1, 2),
+            "lightly_active": round(bmr * 1.12, 2),
+            "moderately_active": round(bmr * 1.29, 2),
+            "very_active": round(bmr * 1.59, 2)
+        }
+
+    def calculate_tdee_mifflin_st_jeor(self, age: int, gender: str) -> dict[str, float] | None:
+        """Calculate TDEE for standard activity levels using Mifflin-St Jeor BMR."""
+        bmr = self.calculate_bmr_mifflin_st_jeor(age, gender)
+        if bmr is None:
+            return None
+        return {
+            "sedentary": round(bmr * 1, 2),
+            "lightly_active": round(bmr * 1.12, 2),
+            "moderately_active": round(bmr * 1.29, 2),
+            "very_active": round(bmr * 1.59, 2)
+        }
+
+

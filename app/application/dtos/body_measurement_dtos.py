@@ -25,6 +25,13 @@ class BodyMeasurementCreateDTO(BaseModel):
     )
 
 
+class TDEEResponseDTO(BaseModel):
+    """Total Daily Energy Expenditure breakdown for different activity levels."""
+    sedentary: float | None = None
+    lightly_active: float | None = None
+    moderately_active: float | None = None
+    very_active: float | None = None
+
 class BodyMeasurementResponseDTO(BaseModel):
     """Output DTO for a single body measurement record."""
 
@@ -45,7 +52,10 @@ class BodyMeasurementResponseDTO(BaseModel):
     maximum_weight: float | None = None
     bmr_harris_benedict: float | None = None
     bmr_mifflin_st_jeor: float | None = None
+    tdee_harris_benedict: TDEEResponseDTO | None = None
+    tdee_mifflin_st_jeor: TDEEResponseDTO | None = None
     created_at: datetime
+
 
 
 

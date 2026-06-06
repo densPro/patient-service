@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from app.application.dtos.body_measurement_dtos import BodyMeasurementResponseDTO
+from app.application.dtos.body_measurement_dtos import BodyMeasurementResponseDTO, TDEEResponseDTO
 from app.application.dtos.patient_create import PatientCreateDTO
 from app.application.dtos.patient_response import PatientResponseDTO
 from app.application.interfaces.unit_of_work import IUnitOfWork
@@ -141,6 +141,8 @@ def _measurement_to_dto(measurement, patient: Patient) -> BodyMeasurementRespons
         maximum_weight=measurement.maximum_weight,
         bmr_harris_benedict=measurement.calculate_bmr_harris_benedict(patient.age, patient.gender.value) if patient.age is not None else None,
         bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
+        tdee_harris_benedict=TDEEResponseDTO(**measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value) is not None else None,
+        tdee_mifflin_st_jeor=TDEEResponseDTO(**measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value) is not None else None,
         created_at=measurement.created_at,
     )
 
