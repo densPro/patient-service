@@ -10,10 +10,12 @@ from app.application.dtos.body_measurement_dtos import (
 )
 from app.application.interfaces.unit_of_work import IUnitOfWork
 from app.domain.entities.body_measurement import BodyMeasurement
+from app.domain.entities.patient import Patient
 from app.domain.exceptions import PatientNotFoundError
 
 
-def _to_dto(measurement: BodyMeasurement) -> BodyMeasurementResponseDTO:
+
+def _to_dto(measurement: BodyMeasurement, patient: Patient) -> BodyMeasurementResponseDTO:
     """Map a BodyMeasurement entity → response DTO."""
     return BodyMeasurementResponseDTO(
         id=measurement.id,
@@ -29,8 +31,11 @@ def _to_dto(measurement: BodyMeasurement) -> BodyMeasurementResponseDTO:
         healthy_weight=measurement.healthy_weight,
         minimum_weight=measurement.minimum_weight,
         maximum_weight=measurement.maximum_weight,
+        bmr_harris_benedict=measurement.calculate_bmr_harris_benedict(patient.age, patient.gender.value) if patient.age is not None else None,
+        bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
         created_at=measurement.created_at,
     )
+
 
 
 
@@ -57,7 +62,7 @@ class GetBodyMeasurementsQuery:
                 raise PatientNotFoundError(
                     f"No measurements found for patient {patient_id}."
                 )
-            return _to_dto(measurement)
+            return _to_dto(measurement, patient)
 
     async def list_all(
         self,
@@ -81,7 +86,7 @@ class GetBodyMeasurementsQuery:
             )
 
             return PaginatedMeasurementsResponseDTO(
-                items=[_to_dto(m) for m in measurements],
+                items=[_to_dto(m, patient) for m in measurements],
                 total=total,
                 limit=limit,
                 offset=offset,

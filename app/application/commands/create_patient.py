@@ -121,7 +121,7 @@ class CreatePatientCommand:
             return _to_response(patient)
 
 
-def _measurement_to_dto(measurement) -> BodyMeasurementResponseDTO | None:
+def _measurement_to_dto(measurement, patient: Patient) -> BodyMeasurementResponseDTO | None:
     """Map an optional BodyMeasurement entity to a BodyMeasurementResponseDTO."""
     if measurement is None:
         return None
@@ -139,6 +139,8 @@ def _measurement_to_dto(measurement) -> BodyMeasurementResponseDTO | None:
         healthy_weight=measurement.healthy_weight,
         minimum_weight=measurement.minimum_weight,
         maximum_weight=measurement.maximum_weight,
+        bmr_harris_benedict=measurement.calculate_bmr_harris_benedict(patient.age, patient.gender.value) if patient.age is not None else None,
+        bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
         created_at=measurement.created_at,
     )
 
@@ -216,5 +218,5 @@ def _to_response(patient: Patient) -> PatientResponseDTO:
         status=patient.status,
         created_at=patient.created_at,
         updated_at=patient.updated_at,
-        latest_measurement=_measurement_to_dto(patient.latest_measurement),
+        latest_measurement=_measurement_to_dto(patient.latest_measurement, patient),
     )

@@ -43,6 +43,8 @@ class BodyMeasurementResponseDTO(BaseModel):
     healthy_weight: float | None = None
     minimum_weight: float | None = None
     maximum_weight: float | None = None
+    bmr_harris_benedict: float | None = None
+    bmr_mifflin_st_jeor: float | None = None
     created_at: datetime
 
 

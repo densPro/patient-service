@@ -63,6 +63,9 @@ class AddBodyMeasurementCommand:
                 healthy_weight=measurement.healthy_weight,
                 minimum_weight=measurement.minimum_weight,
                 maximum_weight=measurement.maximum_weight,
+                bmr_harris_benedict=measurement.calculate_bmr_harris_benedict(patient.age, patient.gender.value) if patient.age is not None else None,
+                bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
                 created_at=measurement.created_at,
             )
+
 

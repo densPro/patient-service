@@ -139,3 +139,27 @@ class BodyMeasurement(AggregateRoot):
             return round((self.height_m ** 2) * 24.9, 1)
         return None
 
+    def calculate_bmr_harris_benedict(self, age: int, gender: str) -> float | None:
+        """Calculate BMR using the revised Harris-Benedict equation (1984)."""
+        if not (self.height_cm and self.weight_kg):
+            return None
+        
+        gender_val = gender.lower().strip()
+        if gender_val == "male":
+            return round(66 + (13.7 * self.weight_kg) + (5 * self.height_cm) - (6.8 * age), 2)
+        elif gender_val == "female":
+            return round(655 + (9.7 * self.weight_kg) + (1.8 * self.height_cm) - (4.7 * age), 2)
+        return None
+       
+    def calculate_bmr_mifflin_st_jeor(self, age: int, gender: str) -> float | None:
+        """Calculate BMR using the Mifflin-St Jeor equation."""
+        if not (self.height_cm and self.weight_kg):
+            return None
+        
+        gender_val = gender.lower().strip()
+        if gender_val == "male":
+            return round((10.0 * self.weight_kg) + (6.25 * self.height_cm) - (5.0 * age) + 5.0, 2)
+        elif gender_val == "female":
+            return round((10.0 * self.weight_kg) + (6.25 * self.height_cm) - (5.0 * age) - 161.0, 2)
+        return None
+
