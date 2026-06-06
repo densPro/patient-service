@@ -7,7 +7,9 @@ import uuid
 from app.application.dtos.body_measurement_dtos import (
     BodyMeasurementResponseDTO,
     PaginatedMeasurementsResponseDTO,
+    StressCaloriesDTO,
     TDEEResponseDTO,
+    TotalCaloriesResponseDTO,
 )
 from app.application.interfaces.unit_of_work import IUnitOfWork
 from app.domain.entities.body_measurement import BodyMeasurement
@@ -36,6 +38,8 @@ def _to_dto(measurement: BodyMeasurement, patient: Patient) -> BodyMeasurementRe
         bmr_mifflin_st_jeor=measurement.calculate_bmr_mifflin_st_jeor(patient.age, patient.gender.value) if patient.age is not None else None,
         tdee_harris_benedict=TDEEResponseDTO(**measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_harris_benedict(patient.age, patient.gender.value) is not None else None,
         tdee_mifflin_st_jeor=TDEEResponseDTO(**measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value)) if patient.age is not None and measurement.calculate_tdee_mifflin_st_jeor(patient.age, patient.gender.value) is not None else None,
+        total_calories_harris_benedict=TotalCaloriesResponseDTO(**{k: StressCaloriesDTO(**v) for k, v in measurement.calculate_total_calories_harris_benedict(patient.age, patient.gender.value).items()}) if patient.age is not None and measurement.calculate_total_calories_harris_benedict(patient.age, patient.gender.value) is not None else None,
+        total_calories_mifflin_st_jeor=TotalCaloriesResponseDTO(**{k: StressCaloriesDTO(**v) for k, v in measurement.calculate_total_calories_mifflin_st_jeor(patient.age, patient.gender.value).items()}) if patient.age is not None and measurement.calculate_total_calories_mifflin_st_jeor(patient.age, patient.gender.value) is not None else None,
         created_at=measurement.created_at,
     )
 

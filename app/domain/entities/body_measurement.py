@@ -9,6 +9,29 @@ from datetime import datetime, timezone
 from app.domain.entities.base import AggregateRoot
 
 
+_ACTIVITY_FACTORS: dict[str, float] = {
+    "sedentary": 1.0,
+    "lightly_active": 1.12,
+    "moderately_active": 1.29,
+    "very_active": 1.59,
+}
+
+_STRESS_FACTORS: dict[str, float] = {
+    "major_surgery": 1.2,
+    "minor_surgery": 1.1,
+    "mild_infection": 1.1,
+    "moderate_infection": 1.5,
+    "severe_infection": 1.8,
+    "trauma_with_impaired_consciousness": 1.35,
+    "burns_40_tbsa": 1.5,
+    "burns_100_tbsa": 1.95,
+    "cancer": 1.2, 
+    "malnutrition": 0.7,
+    "traumatic_brain_injury": 1.6
+}
+
+
+
 @dataclass
 class BodyMeasurement(AggregateRoot):
     """A time-stamped body measurement record linked to a patient.
@@ -186,5 +209,32 @@ class BodyMeasurement(AggregateRoot):
             "moderately_active": round(bmr * 1.29, 2),
             "very_active": round(bmr * 1.59, 2)
         }
+
+
+    def _build_total_calories(self, bmr: float) -> dict[str, dict[str, float]]:
+        """Return BMR × Activity Factor × Stress Factor for every combination."""
+        return {
+            stress_label: {
+                activity_label: round(bmr * af * sf, 2)
+                for activity_label, af in _ACTIVITY_FACTORS.items()
+            }
+            for stress_label, sf in _STRESS_FACTORS.items()
+        }
+
+
+    def calculate_total_calories_harris_benedict(
+        self, age: int, gender: str
+    ) -> dict[str, dict[str, float]] | None:
+        """Total Calories = BMR × Activity Factor × Stress Factor (Harris-Benedict)."""
+        bmr = self.calculate_bmr_harris_benedict(age, gender)
+        return self._build_total_calories(bmr) if bmr is not None else None
+
+    def calculate_total_calories_mifflin_st_jeor(
+        self, age: int, gender: str
+    ) -> dict[str, dict[str, float]] | None:
+        """Total Calories = BMR × Activity Factor × Stress Factor (Mifflin-St Jeor)."""
+        bmr = self.calculate_bmr_mifflin_st_jeor(age, gender)
+        return self._build_total_calories(bmr) if bmr is not None else None
+
 
 
