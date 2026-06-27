@@ -43,6 +43,7 @@ Generate:
 - unit of work
 - entity base classes
 - example patient entity
+- create seeds for doctor, patient, prescription, appointment, specialty for initial population
 - API endpoints
 - database setup
 - docker setup

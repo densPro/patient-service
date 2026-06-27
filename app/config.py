@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     # --- Application ---
-    app_name: str = "Patient Service"
+    app_name: str = "Patient Management Service"
     debug: bool = False
     api_v1_prefix: str = "/api/v1"
 

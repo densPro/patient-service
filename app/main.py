@@ -12,6 +12,7 @@ from app.config import settings
 from app.infrastructure.database.session import engine
 from app.presentation.routers import health_router, patient_router
 from app.presentation.routers import body_measurement_router
+from app.presentation.routers import specialty_router, doctor_router
 
 
 @asynccontextmanager
@@ -28,10 +29,10 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        version="1.0.0",
+        version="2.0.0",
         description=(
-            "Patient management microservice for the Chirimoya healthcare platform. "
-            "Provides CRUD operations and search capabilities for patient records."
+            "Patient Management microservice for the Chirimoya healthcare platform. "
+            "Provides CRUD and search for patients, doctors, and medical specialties."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -51,6 +52,8 @@ def create_app() -> FastAPI:
     app.include_router(health_router.router)
     app.include_router(patient_router.router)
     app.include_router(body_measurement_router.router)
+    app.include_router(specialty_router.router)
+    app.include_router(doctor_router.router)
 
     return app
 

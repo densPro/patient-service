@@ -1,28 +1,52 @@
-# Patient Service
+# Patient Management Service
 
-> Patient management microservice for the **Chirimoya** healthcare platform.
+> Unified patient management microservice for the **Chirimoya** healthcare platform.
 
 ## Tech Stack
 
-| Layer            | Technology                        |
-|------------------|-----------------------------------|
-| Language         | Python 3.12                       |
-| Framework        | FastAPI                           |
-| ORM              | SQLAlchemy 2.0 (async)            |
-| Database         | PostgreSQL 16                     |
-| Migrations       | Alembic                           |
-| Containerization | Docker + Docker Compose           |
+| Layer            | Technology                           |
+|------------------|--------------------------------------|
+| Language         | Python 3.12                          |
+| Framework        | FastAPI                              |
+| ORM              | SQLAlchemy 2.0 (async)               |
+| Database         | PostgreSQL 16                        |
+| Migrations       | Alembic                              |
+| Containerization | Docker + Docker Compose              |
 | Architecture     | DDD / Clean Architecture / CQRS-lite |
+
+---
+
+## Modules
+
+| Module          | Description                                         |
+|-----------------|-----------------------------------------------------|
+| **patients**    | Patient aggregate — demographics, insurance, medical history |
+| **doctors**     | Doctor profiles — license, specialty link, contact  |
+| **specialties** | Medical specialty catalogue                         |
+| **measurements**| Body measurement snapshots (BMI, BMR, TDEE)         |
+
+---
 
 ## Architecture
 
 ```
 app/
-├── domain/           # Enterprise business rules (entities, value objects, enums)
-├── application/      # Use cases, DTOs, commands, queries, interfaces
-├── infrastructure/   # SQLAlchemy models, repositories, unit of work, DB session
+├── domain/           # Entities, value objects, enums, exceptions
+├── application/      # Use cases (commands & queries), DTOs, interfaces
+├── infrastructure/   # SQLAlchemy models, repositories, UoW, seeds
 └── presentation/     # FastAPI routers (REST endpoints)
 ```
+
+### Domain entities
+
+| Entity         | Aggregate Root | Key identifiers      |
+|----------------|----------------|----------------------|
+| Patient        | ✅             | `mrn` (MRN-XXXXXXXX) |
+| Doctor         | ✅             | `employee_id` (EMP-XXXXXXXX) |
+| Specialty      | ✅             | `code` (e.g. CARDIO)  |
+| BodyMeasurement| ✅             | `id` + `patient_id`  |
+
+---
 
 ## Quick Start
 
@@ -30,7 +54,7 @@ app/
 
 ```bash
 cp .env.example .env
-# Edit .env if needed
+# Edit DATABASE_URL if needed
 ```
 
 ### 2. Run with Docker Compose
@@ -39,113 +63,164 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-The API will be available at `http://localhost:8000`.
+The API will be available at `http://localhost:8001`.
 
 ### 3. Run Alembic migrations
 
 ```bash
-# Generate initial migration
-alembic revision --autogenerate -m "create patients table"
+# Auto-generate migration (includes specialties, doctors, patients, measurements)
+alembic revision --autogenerate -m "initial patient management schema"
 
 # Apply migrations
 alembic upgrade head
 ```
 
-### 4. Run locally (without Docker)
+### 4. Seed the database
+
+```bash
+python -m app.infrastructure.seeds.seed
+```
+
+Populates 10 specialties, 5 doctors, and 5 patients.
+
+### 5. Run locally (without Docker)
 
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
+
+---
 
 ## API Endpoints
 
-| Method  | Endpoint                          | Description              |
-|---------|-----------------------------------|--------------------------|
-| `GET`   | `/health`                         | Liveness probe           |
-| `GET`   | `/ready`                          | Readiness probe          |
-| `POST`  | `/api/v1/patients`                | Create a new patient     |
-| `GET`   | `/api/v1/patients`                | Search patients          |
-| `GET`   | `/api/v1/patients/{patient_id}`   | Get patient by ID        |
-| `GET`   | `/api/v1/patients/mrn/{mrn}`      | Get patient by MRN       |
-| `PATCH` | `/api/v1/patients/{patient_id}`   | Update patient           |
+### Health
+
+| Method | Endpoint  | Description      |
+|--------|-----------|------------------|
+| `GET`  | `/health` | Liveness probe   |
+| `GET`  | `/ready`  | Readiness probe  |
+
+### Patients
+
+| Method  | Endpoint                              | Description                  |
+|---------|---------------------------------------|------------------------------|
+| `POST`  | `/api/v1/patients`                    | Create a new patient         |
+| `GET`   | `/api/v1/patients`                    | Search patients (paginated)  |
+| `GET`   | `/api/v1/patients/{patient_id}`       | Get patient by ID            |
+| `GET`   | `/api/v1/patients/mrn/{mrn}`          | Get patient by MRN           |
+| `PATCH` | `/api/v1/patients/{patient_id}`       | Update patient               |
+| `POST`  | `/api/v1/patients/{patient_id}/measurements` | Add body measurement |
+| `GET`   | `/api/v1/patients/{patient_id}/measurements` | List measurements     |
+
+### Specialties
+
+| Method   | Endpoint                              | Description                    |
+|----------|---------------------------------------|--------------------------------|
+| `POST`   | `/api/v1/specialties`                 | Create a specialty             |
+| `GET`    | `/api/v1/specialties`                 | List all specialties           |
+| `GET`    | `/api/v1/specialties/{id}`            | Get specialty by ID            |
+| `GET`    | `/api/v1/specialties/code/{code}`     | Get specialty by code          |
+| `PATCH`  | `/api/v1/specialties/{id}`            | Update specialty               |
+| `DELETE` | `/api/v1/specialties/{id}`            | Soft-deactivate specialty      |
+
+### Doctors
+
+| Method   | Endpoint                              | Description                    |
+|----------|---------------------------------------|--------------------------------|
+| `POST`   | `/api/v1/doctors`                     | Register a new doctor          |
+| `GET`    | `/api/v1/doctors`                     | Search doctors (paginated)     |
+| `GET`    | `/api/v1/doctors/{id}`                | Get doctor by ID               |
+| `GET`    | `/api/v1/doctors/emp/{employee_id}`   | Get doctor by employee ID      |
+| `PATCH`  | `/api/v1/doctors/{id}`                | Update doctor                  |
+| `DELETE` | `/api/v1/doctors/{id}`                | Soft-deactivate doctor         |
 
 ### Interactive docs
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8001/docs
+- **ReDoc**: http://localhost:8001/redoc
 
-## Example: Create a Patient
-
-```bash
-curl -X POST http://localhost:8000/api/v1/patients \
-  -H "Content-Type: application/json" \
-  -d '{
-    "first_name": "María",
-    "last_name": "García",
-    "date_of_birth": "1990-05-15",
-    "gender": "female",
-    "contact_info": {
-      "phone_number": "+1-555-0123",
-      "email": "maria.garcia@email.com"
-    },
-    "blood_type": "O+",
-    "allergies": ["Penicillin"],
-    "address": {
-      "street_line_1": "123 Main St",
-      "city": "San Juan",
-      "state": "PR",
-      "postal_code": "00901",
-      "country": "US"
-    },
-    "emergency_contact": {
-      "full_name": "Carlos García",
-      "relationship": "spouse",
-      "phone_number": "+1-555-0456"
-    }
-  }'
-```
+---
 
 ## Environment Variables
 
-| Variable        | Default                                                        | Description           |
-|-----------------|----------------------------------------------------------------|-----------------------|
-| `APP_NAME`      | `Patient Service`                                              | Application name      |
-| `DEBUG`         | `false`                                                        | Debug mode            |
-| `DATABASE_URL`  | `postgresql+asyncpg://postgres:postgres@localhost:5432/patient_db` | Async DB connection   |
-| `CORS_ORIGINS`  | `["*"]`                                                        | Allowed CORS origins  |
+| Variable        | Default                                                              | Description           |
+|-----------------|----------------------------------------------------------------------|-----------------------|
+| `APP_NAME`      | `Patient Management Service`                                         | Application name      |
+| `DEBUG`         | `false`                                                              | Debug mode            |
+| `DATABASE_URL`  | `postgresql+asyncpg://postgres:postgres@localhost:5432/patient_management_db` | Async DB connection |
+| `CORS_ORIGINS`  | `["*"]`                                                              | Allowed CORS origins  |
+
+---
 
 ## Project Structure
 
 ```
-patient-service/
+patient-management-service/
 ├── app/
-│   ├── config.py                 # Settings (pydantic-settings)
-│   ├── dependencies.py           # DI wiring
-│   ├── main.py                   # FastAPI app factory
+│   ├── config.py                   # Settings (pydantic-settings)
+│   ├── dependencies.py             # DI wiring
+│   ├── main.py                     # FastAPI app factory
 │   ├── domain/
-│   │   ├── entities/             # Entity & AggregateRoot base, Patient
-│   │   ├── value_objects/        # Address, ContactInfo, EmergencyContact, InsuranceInfo
-│   │   ├── enums/                # Gender, BloodType, MaritalStatus, PatientStatus
-│   │   └── exceptions.py        # Domain exceptions
+│   │   ├── entities/               # Patient, Doctor, Specialty, BodyMeasurement
+│   │   ├── value_objects/          # Address, ContactInfo, EmergencyContact, InsuranceInfo, LicenseInfo
+│   │   ├── enums/                  # Gender, BloodType, MaritalStatus, PatientStatus, DoctorStatus, SpecialtyCategory
+│   │   └── exceptions.py           # Domain exceptions
 │   ├── application/
-│   │   ├── interfaces/           # IPatientRepository, IUnitOfWork
-│   │   ├── dtos/                 # Create, Update, Response, Search DTOs
-│   │   ├── commands/             # CreatePatient, UpdatePatient
-│   │   └── queries/              # GetPatient, SearchPatients
+│   │   ├── interfaces/             # IPatientRepository, IDoctorRepository, ISpecialtyRepository, IUnitOfWork
+│   │   ├── dtos/                   # Patient, Doctor, Specialty, BodyMeasurement DTOs
+│   │   ├── commands/               # CreatePatient, UpdatePatient, CreateDoctor, UpdateDoctor, CreateSpecialty, ...
+│   │   └── queries/                # GetPatient, SearchPatients, GetDoctor, SearchDoctors, GetSpecialty
 │   ├── infrastructure/
 │   │   ├── database/
-│   │   │   ├── session.py        # Async engine & session factory
-│   │   │   └── models/           # SQLAlchemy ORM models
-│   │   ├── repositories/         # Concrete PatientRepository
-│   │   └── unit_of_work.py       # SqlAlchemyUnitOfWork
+│   │   │   ├── session.py          # Async engine & session factory
+│   │   │   └── models/             # PatientModel, DoctorModel, SpecialtyModel, BodyMeasurementModel
+│   │   ├── repositories/           # Concrete implementations
+│   │   ├── unit_of_work.py         # SqlAlchemyUnitOfWork
+│   │   └── seeds/
+│   │       └── seed.py             # Database seeder
 │   └── presentation/
-│       └── routers/              # patient_router, health_router
-├── migrations/                   # Alembic
+│       └── routers/                # patient, doctor, specialty, body_measurement, health routers
+├── migrations/                     # Alembic
 ├── alembic.ini
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
 ├── .env.example
 └── README.md
+```
+
+---
+
+## Example: Create a Specialty
+
+```bash
+curl -X POST http://localhost:8001/api/v1/specialties \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "CARDIO",
+    "name": "Cardiology",
+    "category": "therapeutic",
+    "description": "Diagnosis and treatment of heart conditions."
+  }'
+```
+
+## Example: Create a Doctor
+
+```bash
+curl -X POST http://localhost:8001/api/v1/doctors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "Carlos",
+    "last_name": "Rivera",
+    "date_of_birth": "1978-03-20",
+    "gender": "male",
+    "specialty_id": "<specialty-uuid>",
+    "license_info": {
+      "license_number": "PR-12345",
+      "issuing_body": "Puerto Rico Medical Licensing Board"
+    },
+    "years_of_experience": 18,
+    "bio": "Board-certified cardiologist."
+  }'
 ```
