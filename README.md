@@ -57,33 +57,94 @@ cp .env.example .env
 # Edit DATABASE_URL if needed
 ```
 
-### 2. Run with Docker Compose
+### 2. Build & start all containers
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
-The API will be available at `http://localhost:8001`.
+The API will be available at `http://localhost:8001`.  
+The `-d` flag runs everything in the background (detached mode).
 
-### 3. Run Alembic migrations
+### 3. Run Alembic migrations inside the container
+
+Once the containers are running, apply all migrations (creates tables + seeds all data):
 
 ```bash
-# Auto-generate migration (includes specialties, doctors, patients, measurements)
-alembic revision --autogenerate -m "initial patient management schema"
-
-# Apply migrations
-alembic upgrade head
+docker-compose exec patient-management-service alembic upgrade head
 ```
 
-### 4. Seed the database
+This runs every migration in order:
+- Creates the `patients`, `specialties`, `doctors`, and `body_measurements` tables
+- Seeds 100 patients with Venezuelan data
+- Seeds 10 medical specialties and 30 doctors in Spanish
+
+---
+
+## 🔄 Re-running Migrations from Scratch
+
+Use this when you have updated migration files and need a completely clean slate (drops all data).
+
+### Step 1 — Tear down containers and delete the database volume
 
 ```bash
-python -m app.infrastructure.seeds.seed
+docker-compose down -v
 ```
 
-Populates 10 specialties, 5 doctors, and 5 patients.
+> ⚠️ The `-v` flag **deletes all database data permanently**. Only use this when you want a full reset.
 
-### 5. Run locally (without Docker)
+### Step 2 — Rebuild and start containers
+
+```bash
+docker-compose up --build -d
+```
+
+### Step 3 — Apply all migrations
+
+```bash
+docker-compose exec patient-management-service alembic upgrade head
+```
+
+You should see output like:
+
+```
+INFO  Running upgrade  -> a71bef42bd17, create patients table
+INFO  Running upgrade a71bef42bd17 -> d61dc0437346, seed 100 patients
+INFO  Running upgrade d61dc0437346 -> e6a89442c56d, add_age_height_weight_to_patients
+INFO  Running upgrade e6a89442c56d -> f3a1b2c4d5e6, create_patient_body_measurements_and_migrate_data
+INFO  Running upgrade f3a1b2c4d5e6 -> a9b8c7d6e5f4, seed_body_measurements_history
+INFO  Running upgrade a9b8c7d6e5f4 -> ad8a1e4a0e0d, create specialties and doctors tables
+INFO  Running upgrade ad8a1e4a0e0d -> e7c4b56af4a1, seed specialties and doctors
+```
+
+---
+
+## Other Useful Docker Commands
+
+```bash
+# Check running containers
+docker-compose ps
+
+# View live logs from the API service
+docker-compose logs -f patient-management-service
+
+# View live logs from the database
+docker-compose logs -f postgres
+
+# Stop containers (keeps data volume intact)
+docker-compose down
+
+# Open a shell inside the API container
+docker-compose exec patient-management-service bash
+
+# Check current Alembic migration state
+docker-compose exec patient-management-service alembic current
+
+# Roll back the last migration
+docker-compose exec patient-management-service alembic downgrade -1
+```
+
+### Run locally (without Docker)
 
 ```bash
 pip install -r requirements.txt

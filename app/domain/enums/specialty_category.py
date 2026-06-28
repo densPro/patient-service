@@ -8,10 +8,10 @@ from enum import Enum
 class SpecialtyCategory(str, Enum):
     """High-level grouping of medical specialties."""
 
-    PRIMARY_CARE = "primary_care"
-    SURGICAL = "surgical"
-    DIAGNOSTIC = "diagnostic"
-    THERAPEUTIC = "therapeutic"
-    MENTAL_HEALTH = "mental_health"
-    EMERGENCY = "emergency"
-    OTHER = "other"
+    PRIMARY_CARE = "atencion_primaria"
+    SURGICAL = "quirurgica"
+    DIAGNOSTIC = "diagnostica"
+    THERAPEUTIC = "terapeutica"
+    MENTAL_HEALTH = "salud_mental"
+    EMERGENCY = "emergencia"
+    OTHER = "otra"
