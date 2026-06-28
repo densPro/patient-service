@@ -1,15 +1,23 @@
-"""Domain-specific exceptions for the patient service."""
+"""Domain-specific exceptions for the patient-management service."""
 
 
-class PatientServiceError(Exception):
-    """Base exception for all patient-service domain errors."""
+class PatientManagementError(Exception):
+    """Base exception for all patient-management-service domain errors."""
 
-    def __init__(self, message: str = "An error occurred in the patient service.") -> None:
+    def __init__(self, message: str = "An error occurred in the patient management service.") -> None:
         self.message = message
         super().__init__(self.message)
 
 
-class PatientNotFoundError(PatientServiceError):
+# ---------------------------------------------------------------------------
+# Patient exceptions (kept for backward compatibility)
+# ---------------------------------------------------------------------------
+
+# Legacy alias so existing imports keep working
+PatientServiceError = PatientManagementError
+
+
+class PatientNotFoundError(PatientManagementError):
     """Raised when a patient cannot be found by ID or MRN."""
 
     def __init__(self, identifier: str) -> None:
@@ -17,7 +25,7 @@ class PatientNotFoundError(PatientServiceError):
         self.identifier = identifier
 
 
-class DuplicatePatientError(PatientServiceError):
+class DuplicatePatientError(PatientManagementError):
     """Raised when attempting to create a patient with a duplicate MRN."""
 
     def __init__(self, mrn: str) -> None:
@@ -25,9 +33,67 @@ class DuplicatePatientError(PatientServiceError):
         self.mrn = mrn
 
 
-class InvalidPatientDataError(PatientServiceError):
+class InvalidPatientDataError(PatientManagementError):
     """Raised when patient data fails domain validation."""
 
     def __init__(self, detail: str) -> None:
         super().__init__(f"Invalid patient data: {detail}")
+        self.detail = detail
+
+
+# ---------------------------------------------------------------------------
+# Specialty exceptions
+# ---------------------------------------------------------------------------
+
+
+class SpecialtyNotFoundError(PatientManagementError):
+    """Raised when a specialty cannot be found by ID or code."""
+
+    def __init__(self, identifier: str) -> None:
+        super().__init__(f"Specialty not found: {identifier}")
+        self.identifier = identifier
+
+
+class DuplicateSpecialtyError(PatientManagementError):
+    """Raised when attempting to create a specialty with a duplicate code."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(f"A specialty with code '{code}' already exists.")
+        self.code = code
+
+
+class InvalidSpecialtyDataError(PatientManagementError):
+    """Raised when specialty data fails domain validation."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"Invalid specialty data: {detail}")
+        self.detail = detail
+
+
+# ---------------------------------------------------------------------------
+# Doctor exceptions
+# ---------------------------------------------------------------------------
+
+
+class DoctorNotFoundError(PatientManagementError):
+    """Raised when a doctor cannot be found by ID or employee ID."""
+
+    def __init__(self, identifier: str) -> None:
+        super().__init__(f"Doctor not found: {identifier}")
+        self.identifier = identifier
+
+
+class DuplicateDoctorError(PatientManagementError):
+    """Raised when attempting to create a doctor with a duplicate employee ID."""
+
+    def __init__(self, employee_id: str) -> None:
+        super().__init__(f"A doctor with employee ID '{employee_id}' already exists.")
+        self.employee_id = employee_id
+
+
+class InvalidDoctorDataError(PatientManagementError):
+    """Raised when doctor data fails domain validation."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"Invalid doctor data: {detail}")
         self.detail = detail

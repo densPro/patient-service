@@ -7,6 +7,8 @@ from types import TracebackType
 
 from app.application.interfaces.body_measurement_repository import IBodyMeasurementRepository
 from app.application.interfaces.patient_repository import IPatientRepository
+from app.application.interfaces.specialty_repository import ISpecialtyRepository
+from app.application.interfaces.doctor_repository import IDoctorRepository
 
 
 class IUnitOfWork(ABC):
@@ -23,6 +25,8 @@ class IUnitOfWork(ABC):
 
     patients: IPatientRepository
     measurements: IBodyMeasurementRepository
+    specialties: ISpecialtyRepository
+    doctors: IDoctorRepository
 
     @abstractmethod
     async def commit(self) -> None:

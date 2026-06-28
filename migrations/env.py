@@ -17,6 +17,8 @@ from app.infrastructure.database.session import Base
 # Register all models here so their tables appear in Base.metadata
 import app.infrastructure.database.models.patient_model  # noqa: F401
 import app.infrastructure.database.models.body_measurement_model  # noqa: F401
+import app.infrastructure.database.models.specialty_model  # noqa: F401
+import app.infrastructure.database.models.doctor_model  # noqa: F401
 
 # Alembic Config object
 config = context.config

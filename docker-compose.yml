@@ -2,37 +2,37 @@ services:
   # ── PostgreSQL ──────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: patient-db
+    container_name: patient-management-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: patient_db
+      POSTGRES_DB: patient_management_db
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - patient_db_data:/var/lib/postgresql/data
+      - patient_management_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── Patient Service ─────────────────────────────────────
-  patient-service:
+  # ── Patient Management Service ──────────────────────────
+  patient-management-service:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: patient-service
+    container_name: patient-management-service
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/patient_db
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/patient_management_db
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  patient_db_data:
+  patient_management_db_data:

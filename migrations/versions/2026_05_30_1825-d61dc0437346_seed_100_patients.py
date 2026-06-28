@@ -51,17 +51,17 @@ def upgrade() -> None:
 
     random.seed(42)  # Deterministic seed so the exact same patients are created every time
 
-    first_names_male = ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Mark"]
-    first_names_female = ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Lisa", "Nancy", "Betty", "Sandra", "Margaret"]
-    last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"]
+    first_names_male = ["Carlos", "José", "Luis", "Miguel", "Juan", "Andrés", "Diego", "Manuel", "Pedro", "Alejandro", "Fernando", "Eduardo", "Ricardo", "Roberto", "Francisco"]
+    first_names_female = ["María", "Luisa", "Ana", "Carmen", "Gabriela", "Sofía", "Valentina", "Isabel", "Patricia", "Daniela", "Alejandra", "Verónica", "Mónica", "Natalia", "Elena"]
+    last_names = ["González", "Rodríguez", "Pérez", "García", "Martínez", "López", "Hernández", "Díaz", "Morales", "Torres", "Ramírez", "Flores", "Castro", "Vargas", "Romero", "Jiménez", "Salazar", "Medina", "Reyes", "Gutiérrez"]
 
     genders = ["male", "female"]
     marital_statuses = ["single", "married", "divorced", "widowed"]
     blood_types = ["O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"]
-    all_allergies = ["Penicillin", "Sulfa drugs", "Peanuts", "Shellfish", "Latex", "Aspirin", "Tree nuts"]
-    all_conditions = ["Hypertension", "Type 2 Diabetes", "Asthma", "Hyperlipidemia", "Hypothyroidism", "Arthritis", "Anxiety"]
-    providers = ["Blue Cross Blue Shield", "UnitedHealthcare", "Aetna", "Cigna", "Humana"]
-    relationships = ["spouse", "parent", "sibling", "child", "friend"]
+    all_allergies = ["Penicilina", "Sulfonamidas", "Maní", "Mariscos", "Látex", "Aspirina", "Frutos secos"]
+    all_conditions = ["Hipertensión", "Diabetes tipo 2", "Asma", "Hiperlipidemia", "Hipotiroidismo", "Artritis", "Ansiedad"]
+    providers = ["IVSS", "Sanitas Venezuela", "Seguros Caracas", "Seguros La Occidental", "Mapfre Venezuela"]
+    relationships = ["cónyuge", "padre/madre", "hermano/a", "hijo/a", "amigo/a"]
 
     patients_data = []
     for i in range(100):
@@ -87,24 +87,24 @@ def upgrade() -> None:
         conditions = random.sample(all_conditions, random.randint(0, 2))
 
         # Random contact info
-        email = f"{first_name.lower()}.{last_name.lower()}{random.randint(10, 99)}@example.com"
-        phone = f"+1-555-01{random.randint(10, 99)}"
+        email = f"{first_name.lower()}.{last_name.lower()}{random.randint(10, 99)}@correo.com"
+        phone = f"+58-412-{random.randint(1000000, 9999999)}"
         contact_info = {"phone_number": phone, "email": email}
 
         # Random address
         address = {
-            "street_line_1": f"{random.randint(100, 999)} Main St",
-            "city": random.choice(["Boston", "New York", "Chicago", "Seattle", "Austin", "Denver"]),
-            "state": random.choice(["MA", "NY", "IL", "WA", "TX", "CO"]),
-            "postal_code": f"{random.randint(10000, 99999)}",
-            "country": "US"
+            "street_line_1": f"Calle {random.randint(1, 50)}, Residencia {random.choice(['Los Pinos', 'El Rosal', 'La Florida', 'Las Mercedes', 'Altamira'])}",
+            "city": random.choice(["Caracas", "Maracaibo", "Valencia", "Barquisimeto", "Maturín", "Barcelona"]),
+            "state": random.choice(["Distrito Capital", "Zulia", "Carabobo", "Lara", "Monagas", "Anzoátegui"]),
+            "postal_code": f"{random.randint(1000, 9999)}",
+            "country": "VE"
         }
 
         # Emergency contact
         emergency_contact = {
             "full_name": f"{random.choice(first_names_male if gender == 'female' else first_names_female)} {last_name}",
             "relationship": random.choice(relationships),
-            "phone_number": f"+1-555-02{random.randint(10, 99)}"
+            "phone_number": f"+58-414-{random.randint(1000000, 9999999)}"
         }
 
         # Insurance info
@@ -123,7 +123,7 @@ def upgrade() -> None:
             "gender": gender,
             "marital_status": random.choice(marital_statuses),
             "ssn_last_four": ssn_last_four,
-            "national_id": f"ID-{random.randint(100000, 999999)}",
+            "national_id": f"V-{random.randint(1000000, 29999999)}",
             "blood_type": random.choice(blood_types),
             "allergies": allergies,
             "chronic_conditions": conditions,
@@ -131,7 +131,7 @@ def upgrade() -> None:
             "address": address,
             "emergency_contact": emergency_contact,
             "insurance_info": insurance_info,
-            "notes": f"Simulated seed data for testing. Patient number {i+1}.",
+            "notes": f"Datos de prueba simulados. Paciente número {i+1}.",
             "status": "active" if random.random() > 0.1 else "inactive",
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc)
