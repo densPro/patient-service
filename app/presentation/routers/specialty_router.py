@@ -15,6 +15,7 @@ from app.application.dtos.specialty_dtos import (
     SpecialtyUpdateDTO,
 )
 from app.application.queries.get_specialty import GetSpecialtyQuery
+from app.core.logging import get_logger
 from app.dependencies import get_unit_of_work
 from app.domain.exceptions import (
     DuplicateSpecialtyError,
@@ -23,6 +24,7 @@ from app.domain.exceptions import (
 )
 
 router = APIRouter(prefix="/api/v1/specialties", tags=["Specialties"])
+logger = get_logger(__name__)
 
 
 # ------------------------------------------------------------------

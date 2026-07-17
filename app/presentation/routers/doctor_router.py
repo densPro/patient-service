@@ -18,6 +18,7 @@ from app.application.dtos.doctor_dtos import (
 from app.application.queries.get_doctor import GetDoctorQuery
 from app.application.queries.search_doctors import SearchDoctorsQuery
 from app.application.dtos.doctor_dtos import DoctorSearchDTO
+from app.core.logging import get_logger
 from app.dependencies import get_unit_of_work
 from app.domain.enums.doctor_status import DoctorStatus
 from app.domain.exceptions import (
@@ -28,6 +29,7 @@ from app.domain.exceptions import (
 )
 
 router = APIRouter(prefix="/api/v1/doctors", tags=["Doctors"])
+logger = get_logger(__name__)
 
 
 # ------------------------------------------------------------------
@@ -47,14 +49,26 @@ async def create_doctor(
     dto: DoctorCreateDTO,
     uow=Depends(get_unit_of_work),
 ) -> DoctorResponseDTO:
+    logger.debug(
+        "create_doctor request received",
+        extra={"name": f"{dto.first_name} {dto.last_name}", "specialty_id": str(dto.specialty_id)},
+    )
     try:
         command = CreateDoctorCommand(uow)
-        return await command.execute(dto)
+        result = await command.execute(dto)
+        logger.info(
+            "Doctor created",
+            extra={"doctor_id": str(result.id), "employee_id": result.employee_id},
+        )
+        return result
     except SpecialtyNotFoundError as exc:
+        logger.warning("Specialty not found when creating doctor", extra={"detail": exc.message})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
     except DuplicateDoctorError as exc:
+        logger.warning("Duplicate doctor rejected", extra={"detail": exc.message})
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.message)
     except InvalidDoctorDataError as exc:
+        logger.warning("Invalid doctor data", extra={"detail": exc.message})
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.message
         )
@@ -87,7 +101,14 @@ async def search_doctors(
         offset=offset,
     )
     query = SearchDoctorsQuery(uow)
-    return await query.execute(search_dto)
+    result = await query.execute(search_dto)
+    logger.debug(
+        "Doctor search returned %d/%d results",
+        len(result.items),
+        result.total,
+        extra={"limit": limit, "offset": offset},
+    )
+    return result
 
 
 # ------------------------------------------------------------------
@@ -107,6 +128,7 @@ async def get_doctor_by_id(
         query = GetDoctorQuery(uow)
         return await query.by_id(doctor_id)
     except DoctorNotFoundError as exc:
+        logger.info("Doctor not found", extra={"doctor_id": str(doctor_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
@@ -127,6 +149,7 @@ async def get_doctor_by_employee_id(
         query = GetDoctorQuery(uow)
         return await query.by_employee_id(employee_id)
     except DoctorNotFoundError as exc:
+        logger.info("Doctor not found by employee ID", extra={"employee_id": employee_id})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
@@ -147,14 +170,26 @@ async def update_doctor(
     dto: DoctorUpdateDTO,
     uow=Depends(get_unit_of_work),
 ) -> DoctorResponseDTO:
+    logger.debug("update_doctor request", extra={"doctor_id": str(doctor_id)})
     try:
         command = UpdateDoctorCommand(uow)
-        return await command.execute(doctor_id, dto)
+        result = await command.execute(doctor_id, dto)
+        logger.info("Doctor updated", extra={"doctor_id": str(doctor_id)})
+        return result
     except DoctorNotFoundError as exc:
+        logger.info("Doctor not found for update", extra={"doctor_id": str(doctor_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
     except SpecialtyNotFoundError as exc:
+        logger.warning(
+            "Specialty not found during doctor update",
+            extra={"doctor_id": str(doctor_id), "detail": exc.message},
+        )
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
     except InvalidDoctorDataError as exc:
+        logger.warning(
+            "Invalid update data for doctor",
+            extra={"doctor_id": str(doctor_id), "detail": exc.message},
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.message
         )
@@ -173,8 +208,12 @@ async def deactivate_doctor(
     doctor_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
 ) -> DoctorResponseDTO:
+    logger.debug("deactivate_doctor request", extra={"doctor_id": str(doctor_id)})
     try:
         command = DeactivateDoctorCommand(uow)
-        return await command.execute(doctor_id)
+        result = await command.execute(doctor_id)
+        logger.info("Doctor deactivated", extra={"doctor_id": str(doctor_id)})
+        return result
     except DoctorNotFoundError as exc:
+        logger.info("Doctor not found for deactivation", extra={"doctor_id": str(doctor_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)

@@ -13,10 +13,12 @@ from app.application.dtos.body_measurement_dtos import (
     PaginatedMeasurementsResponseDTO,
 )
 from app.application.queries.get_body_measurements import GetBodyMeasurementsQuery
+from app.core.logging import get_logger
 from app.dependencies import get_unit_of_work
 from app.domain.exceptions import InvalidPatientDataError, PatientNotFoundError
 
 router = APIRouter(prefix="/api/v1/patients", tags=["Body Measurements"])
+logger = get_logger(__name__)
 
 
 # ------------------------------------------------------------------
@@ -37,12 +39,23 @@ async def add_body_measurement(
     dto: BodyMeasurementCreateDTO,
     uow=Depends(get_unit_of_work),
 ) -> BodyMeasurementResponseDTO:
+    logger.debug("add_body_measurement request", extra={"patient_id": str(patient_id)})
     try:
         command = AddBodyMeasurementCommand(uow)
-        return await command.execute(patient_id, dto)
+        result = await command.execute(patient_id, dto)
+        logger.info(
+            "Body measurement recorded",
+            extra={"patient_id": str(patient_id), "measurement_id": str(result.id)},
+        )
+        return result
     except PatientNotFoundError as exc:
+        logger.info("Patient not found for measurement", extra={"patient_id": str(patient_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
     except InvalidPatientDataError as exc:
+        logger.warning(
+            "Invalid measurement data",
+            extra={"patient_id": str(patient_id), "detail": exc.message},
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.message
         )

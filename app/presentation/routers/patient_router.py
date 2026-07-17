@@ -17,6 +17,7 @@ from app.application.dtos.patient_search import PatientSearchDTO
 from app.application.dtos.patient_update import PatientUpdateDTO
 from app.application.queries.get_patient import GetPatientQuery
 from app.application.queries.search_patients import SearchPatientsQuery
+from app.core.logging import get_logger
 from app.dependencies import get_unit_of_work
 from app.domain.enums.patient_status import PatientStatus
 from app.domain.exceptions import (
@@ -26,6 +27,7 @@ from app.domain.exceptions import (
 )
 
 router = APIRouter(prefix="/api/v1/patients", tags=["Patients"])
+logger = get_logger(__name__)
 
 
 # ------------------------------------------------------------------
@@ -42,12 +44,20 @@ async def create_patient(
     dto: PatientCreateDTO,
     uow=Depends(get_unit_of_work),
 ) -> PatientResponseDTO:
+    logger.debug("create_patient request received", extra={"name": f"{dto.first_name} {dto.last_name}"})
     try:
         command = CreatePatientCommand(uow)
-        return await command.execute(dto)
+        result = await command.execute(dto)
+        logger.info(
+            "Patient created",
+            extra={"patient_id": str(result.id), "mrn": result.mrn},
+        )
+        return result
     except DuplicatePatientError as exc:
+        logger.warning("Duplicate patient rejected", extra={"detail": exc.message})
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.message)
     except InvalidPatientDataError as exc:
+        logger.warning("Invalid patient data", extra={"detail": exc.message})
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.message
         )
@@ -70,6 +80,7 @@ async def get_patient_by_id(
         query = GetPatientQuery(uow)
         return await query.by_id(patient_id)
     except PatientNotFoundError as exc:
+        logger.info("Patient not found", extra={"patient_id": str(patient_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
@@ -90,6 +101,7 @@ async def get_patient_by_mrn(
         query = GetPatientQuery(uow)
         return await query.by_mrn(mrn)
     except PatientNotFoundError as exc:
+        logger.info("Patient not found by MRN", extra={"mrn": mrn})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
@@ -107,12 +119,20 @@ async def update_patient(
     dto: PatientUpdateDTO,
     uow=Depends(get_unit_of_work),
 ) -> PatientResponseDTO:
+    logger.debug("update_patient request", extra={"patient_id": str(patient_id)})
     try:
         command = UpdatePatientCommand(uow)
-        return await command.execute(patient_id, dto)
+        result = await command.execute(patient_id, dto)
+        logger.info("Patient updated", extra={"patient_id": str(patient_id)})
+        return result
     except PatientNotFoundError as exc:
+        logger.info("Patient not found for update", extra={"patient_id": str(patient_id)})
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
     except InvalidPatientDataError as exc:
+        logger.warning(
+            "Invalid update data for patient",
+            extra={"patient_id": str(patient_id), "detail": exc.message},
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.message
         )
@@ -147,4 +167,11 @@ async def search_patients(
         offset=offset,
     )
     query = SearchPatientsQuery(uow)
-    return await query.execute(search_dto)
+    result = await query.execute(search_dto)
+    logger.debug(
+        "Patient search returned %d/%d results",
+        len(result.items),
+        result.total,
+        extra={"limit": limit, "offset": offset},
+    )
+    return result

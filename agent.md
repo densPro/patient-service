@@ -18,6 +18,7 @@ Requirements:
 - Alembic migrations
 - async SQLAlchemy
 - REST API
+- Logger
 
 Features:
 - create patient

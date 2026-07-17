@@ -28,5 +28,11 @@ class Settings(BaseSettings):
     # --- CORS ---
     cors_origins: list[str] = ["*"]
 
+    # --- Logging ---
+    # LOG_LEVEL: DEBUG | INFO | WARNING | ERROR | CRITICAL  (default: INFO)
+    # LOG_FORMAT: "text" (colorized, human-readable) | "json" (structured, for prod)
+    log_level: str = "INFO"
+    log_format: str = "text"
+
 
 settings = Settings()
