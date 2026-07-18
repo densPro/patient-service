@@ -1,0 +1,236 @@
+### Patient Management Service — Specialty Endpoints
+### Requires: REST Client extension (humao.rest-client)
+### Only "admin" role can create, update, or deactivate specialties.
+### All authenticated users can read.
+
+@baseUrl      = http://localhost:8001
+@token        = PASTE_YOUR_ACCESS_TOKEN_HERE
+@adminToken   = PASTE_ADMIN_ACCESS_TOKEN_HERE
+@specialtyId  = PASTE_SPECIALTY_UUID_HERE
+@specialtyCode = CARDIO
+
+
+# ══════════════════════════════════════════════════════════════════
+# POST /api/v1/specialties  — Create a new specialty (admin only)
+# ══════════════════════════════════════════════════════════════════
+
+### 1. Create specialty — Cardiology
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "CARDIO",
+  "name": "Cardiology",
+  "category": "terapeutica",
+  "description": "Diagnosis and treatment of heart and cardiovascular system disorders."
+}
+
+###
+
+### 2. Create specialty — Neurology
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "NEURO",
+  "name": "Neurology",
+  "category": "terapeutica",
+  "description": "Diagnosis and treatment of disorders of the nervous system."
+}
+
+###
+
+### 3. Create specialty — General Surgery
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "GEN_SURG",
+  "name": "General Surgery",
+  "category": "quirurgica",
+  "description": "Surgical treatment of abdominal organs and related structures."
+}
+
+###
+
+### 4. Create specialty — Family Medicine (Primary Care)
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "FAM_MED",
+  "name": "Family Medicine",
+  "category": "atencion_primaria"
+}
+
+###
+
+### 5. Create specialty — expect 409 Conflict (duplicate code)
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "CARDIO",
+  "name": "Cardiology Duplicate",
+  "category": "terapeutica"
+}
+
+###
+
+### 6. Create specialty — expect 422 Unprocessable Entity (invalid code format)
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "invalid code!",
+  "name": "Bad Code",
+  "category": "terapeutica"
+}
+
+###
+
+### 7. Create specialty — expect 403 Forbidden (non-admin token)
+POST {{baseUrl}}/api/v1/specialties
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "code": "FORBIDDEN",
+  "name": "Should Fail",
+  "category": "otra"
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/specialties  — List all specialties
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 8. List all specialties (active and inactive)
+GET {{baseUrl}}/api/v1/specialties
+Authorization: Bearer {{token}}
+
+###
+
+### 9. List only active specialties
+GET {{baseUrl}}/api/v1/specialties?active_only=true
+Authorization: Bearer {{token}}
+
+###
+
+### 10. List specialties — expect 401 Unauthorized (missing token)
+GET {{baseUrl}}/api/v1/specialties
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/specialties/{specialty_id}  — Get specialty by UUID
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 11. Get specialty by UUID — replace specialtyId at the top
+GET {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 12. Get specialty by UUID — expect 404 Not Found
+GET {{baseUrl}}/api/v1/specialties/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/specialties/code/{code}  — Get specialty by code
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 13. Get specialty by code
+GET {{baseUrl}}/api/v1/specialties/code/{{specialtyCode}}
+Authorization: Bearer {{token}}
+
+###
+
+### 14. Get specialty by code — expect 404 Not Found
+GET {{baseUrl}}/api/v1/specialties/code/DOES_NOT_EXIST
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PATCH /api/v1/specialties/{specialty_id}  — Partial update (admin only)
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 15. Update specialty name
+PATCH {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Cardiology & Electrophysiology"
+}
+
+###
+
+### 16. Update specialty description and category
+PATCH {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "description": "Updated description including electrophysiology sub-specialty.",
+  "category": "terapeutica"
+}
+
+###
+
+### 17. Update specialty — expect 404 Not Found
+PATCH {{baseUrl}}/api/v1/specialties/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Ghost Specialty"
+}
+
+###
+
+### 18. Update specialty — expect 403 Forbidden (non-admin token)
+PATCH {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Should Be Rejected"
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# DELETE /api/v1/specialties/{specialty_id}  — Deactivate (soft-delete, admin only)
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 19. Deactivate (soft-delete) a specialty — sets is_active=false
+DELETE {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 20. Deactivate specialty — expect 404 Not Found
+DELETE {{baseUrl}}/api/v1/specialties/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 21. Deactivate specialty — expect 403 Forbidden (non-admin token)
+DELETE {{baseUrl}}/api/v1/specialties/{{specialtyId}}
+Authorization: Bearer {{token}}

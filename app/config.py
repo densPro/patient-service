@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,10 +24,14 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     # --- Database ---
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/patient_db"
+    database_url: str = Field(..., validation_alias="DATABASE_URL")
 
     # --- CORS ---
     cors_origins: list[str] = ["*"]
+
+    # --- JWT (shared with identity-service for local token verification) ---
+    jwt_secret_key: str = Field(..., validation_alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = "HS256"
 
     # --- Logging ---
     # LOG_LEVEL: DEBUG | INFO | WARNING | ERROR | CRITICAL  (default: INFO)

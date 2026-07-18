@@ -6,6 +6,8 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.auth import get_current_user, require_role
+
 from app.application.commands.create_patient import CreatePatientCommand
 from app.application.commands.update_patient import UpdatePatientCommand
 from app.application.dtos.patient_create import PatientCreateDTO
@@ -43,6 +45,7 @@ logger = get_logger(__name__)
 async def create_patient(
     dto: PatientCreateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin", "doctor", "nurse", "receptionist")),
 ) -> PatientResponseDTO:
     logger.debug("create_patient request received", extra={"name": f"{dto.first_name} {dto.last_name}"})
     try:
@@ -75,6 +78,7 @@ async def create_patient(
 async def get_patient_by_id(
     patient_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> PatientResponseDTO:
     try:
         query = GetPatientQuery(uow)
@@ -96,6 +100,7 @@ async def get_patient_by_id(
 async def get_patient_by_mrn(
     mrn: str,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> PatientResponseDTO:
     try:
         query = GetPatientQuery(uow)
@@ -118,6 +123,7 @@ async def update_patient(
     patient_id: uuid.UUID,
     dto: PatientUpdateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin", "doctor", "nurse")),
 ) -> PatientResponseDTO:
     logger.debug("update_patient request", extra={"patient_id": str(patient_id)})
     try:
@@ -156,6 +162,7 @@ async def search_patients(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> PaginatedPatientsResponseDTO:
     search_dto = PatientSearchDTO(
         first_name=first_name,

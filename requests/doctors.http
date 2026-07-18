@@ -1,0 +1,294 @@
+### Patient Management Service — Doctor Endpoints
+### Requires: REST Client extension (humao.rest-client)
+### Only "admin" role can create, update, or deactivate doctors.
+### All authenticated users can read.
+###
+### IMPORTANT: You need a valid specialtyId before creating a doctor.
+###            Run specialties.http first to create a specialty and get its UUID.
+
+@baseUrl     = http://localhost:8001
+@token       = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MWI0YTg5OC0wNDkxLTRlOGMtODMxZS04ZTBmNzgzMjNiOGYiLCJlbWFpbCI6ImFkbWluQGNoaXJpbW95YS5jb20iLCJyb2xlIjoiYWRtaW4iLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg0MzM5ODUxLCJpYXQiOjE3ODQzMzg5NTF9.3QE6_kx9pgUb1RxC2xPdUOHkD_GDtLe-0AV9hPId7yM
+@adminToken  = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MWI0YTg5OC0wNDkxLTRlOGMtODMxZS04ZTBmNzgzMjNiOGYiLCJlbWFpbCI6ImFkbWluQGNoaXJpbW95YS5jb20iLCJyb2xlIjoiYWRtaW4iLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg0MzM5ODUxLCJpYXQiOjE3ODQzMzg5NTF9.3QE6_kx9pgUb1RxC2xPdUOHkD_GDtLe-0AV9hPId7yM
+@doctorId    = PASTE_DOCTOR_UUID_HERE
+@employeeId  = PASTE_EMPLOYEE_ID_HERE
+@specialtyId = PASTE_SPECIALTY_UUID_HERE
+
+
+# ══════════════════════════════════════════════════════════════════
+# POST /api/v1/doctors  — Register a new doctor (admin only)
+# ══════════════════════════════════════════════════════════════════
+
+### 1. Create doctor — minimal required fields
+POST {{baseUrl}}/api/v1/doctors
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "first_name": "Ana",
+  "last_name": "Ramírez",
+  "specialty_id": "{{specialtyId}}"
+}
+
+###
+
+### 2. Create doctor — full payload with all optional fields
+POST {{baseUrl}}/api/v1/doctors
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "first_name": "Roberto",
+  "last_name": "Herrera",
+  "date_of_birth": "1975-08-14",
+  "gender": "male",
+  "specialty_id": "{{specialtyId}}",
+  "years_of_experience": 18,
+  "bio": "Board-certified cardiologist with 18 years of experience in interventional cardiology.",
+  "license_info": {
+    "license_number": "FL-MED-2025-001234",
+    "issuing_body": "Florida Board of Medicine",
+    "issue_date": "2005-06-01",
+    "expiration_date": "2027-06-01",
+    "state": "FL"
+  },
+  "contact_info": {
+    "phone_number": "+1-305-555-7890",
+    "email": "dr.herrera@chirimoya.com"
+  },
+  "address": {
+    "street_line_1": "789 Medical Center Drive",
+    "street_line_2": "Suite 300",
+    "city": "Miami",
+    "state": "FL",
+    "postal_code": "33136",
+    "country": "US"
+  }
+}
+
+###
+
+### 3. Create doctor — expect 404 Not Found (invalid specialty_id)
+POST {{baseUrl}}/api/v1/doctors
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "first_name": "Ghost",
+  "last_name": "Doctor",
+  "specialty_id": "00000000-0000-0000-0000-000000000000"
+}
+
+###
+
+### 4. Create doctor — expect 403 Forbidden (non-admin token)
+POST {{baseUrl}}/api/v1/doctors
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Unauthorized",
+  "last_name": "Doctor",
+  "specialty_id": "{{specialtyId}}"
+}
+
+###
+
+### 5. Create doctor — expect 401 Unauthorized (missing token)
+POST {{baseUrl}}/api/v1/doctors
+Content-Type: application/json
+
+{
+  "first_name": "No",
+  "last_name": "Token",
+  "specialty_id": "{{specialtyId}}"
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/doctors  — Search / list doctors
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 6. List all doctors — default pagination
+GET {{baseUrl}}/api/v1/doctors
+Authorization: Bearer {{token}}
+
+###
+
+### 7. Search by first name
+GET {{baseUrl}}/api/v1/doctors?first_name=Ana
+Authorization: Bearer {{token}}
+
+###
+
+### 8. Search by last name
+GET {{baseUrl}}/api/v1/doctors?last_name=Herrera
+Authorization: Bearer {{token}}
+
+###
+
+### 9. Filter by specialty_id
+GET {{baseUrl}}/api/v1/doctors?specialty_id={{specialtyId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 10. Filter by status (active | inactive)
+GET {{baseUrl}}/api/v1/doctors?status=active
+Authorization: Bearer {{token}}
+
+###
+
+### 11. Search with pagination
+GET {{baseUrl}}/api/v1/doctors?limit=5&offset=0
+Authorization: Bearer {{token}}
+
+###
+
+### 12. Combined search — name + specialty + status
+GET {{baseUrl}}/api/v1/doctors?last_name=Herrera&status=active&limit=10&offset=0
+Authorization: Bearer {{token}}
+
+###
+
+### 13. Search doctors — expect 401 Unauthorized (missing token)
+GET {{baseUrl}}/api/v1/doctors
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/doctors/{doctor_id}  — Get doctor by UUID
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 14. Get doctor by UUID — replace doctorId at the top
+GET {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 15. Get doctor by UUID — expect 404 Not Found
+GET {{baseUrl}}/api/v1/doctors/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/doctors/emp/{employee_id}  — Get doctor by Employee ID
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 16. Get doctor by employee ID — replace employeeId at the top
+GET {{baseUrl}}/api/v1/doctors/emp/{{employeeId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 17. Get doctor by employee ID — expect 404 Not Found
+GET {{baseUrl}}/api/v1/doctors/emp/EMP-DOES-NOT-EXIST
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PATCH /api/v1/doctors/{doctor_id}  — Partial update (admin only)
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 18. Update doctor bio and years of experience
+PATCH {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "bio": "Updated: Specializes in advanced cardiac imaging and minimally invasive procedures.",
+  "years_of_experience": 20
+}
+
+###
+
+### 19. Update doctor contact info
+PATCH {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "contact_info": {
+    "phone_number": "+1-305-555-0000",
+    "email": "dr.herrera.updated@chirimoya.com"
+  }
+}
+
+###
+
+### 20. Update doctor license
+PATCH {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "license_info": {
+    "license_number": "FL-MED-2026-001234",
+    "issuing_body": "Florida Board of Medicine",
+    "issue_date": "2005-06-01",
+    "expiration_date": "2028-06-01",
+    "state": "FL"
+  }
+}
+
+###
+
+### 21. Change doctor specialty
+PATCH {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "specialty_id": "{{specialtyId}}"
+}
+
+###
+
+### 22. Update doctor — expect 404 Not Found
+PATCH {{baseUrl}}/api/v1/doctors/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "bio": "Ghost doctor"
+}
+
+###
+
+### 23. Update doctor — expect 403 Forbidden (non-admin)
+PATCH {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "bio": "Should be rejected."
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# DELETE /api/v1/doctors/{doctor_id}  — Deactivate (soft-delete, admin only)
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 24. Deactivate doctor — sets status=inactive
+DELETE {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 25. Deactivate doctor — expect 404 Not Found
+DELETE {{baseUrl}}/api/v1/doctors/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 26. Deactivate doctor — expect 403 Forbidden (non-admin)
+DELETE {{baseUrl}}/api/v1/doctors/{{doctorId}}
+Authorization: Bearer {{token}}

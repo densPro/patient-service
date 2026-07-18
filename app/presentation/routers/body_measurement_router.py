@@ -6,6 +6,8 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.auth import get_current_user, require_role
+
 from app.application.commands.add_body_measurement import AddBodyMeasurementCommand
 from app.application.dtos.body_measurement_dtos import (
     BodyMeasurementCreateDTO,
@@ -38,6 +40,7 @@ async def add_body_measurement(
     patient_id: uuid.UUID,
     dto: BodyMeasurementCreateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin", "doctor", "nurse")),
 ) -> BodyMeasurementResponseDTO:
     logger.debug("add_body_measurement request", extra={"patient_id": str(patient_id)})
     try:
@@ -73,6 +76,7 @@ async def add_body_measurement(
 async def get_latest_measurement(
     patient_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> BodyMeasurementResponseDTO:
     try:
         query = GetBodyMeasurementsQuery(uow)
@@ -95,6 +99,7 @@ async def list_measurements(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> PaginatedMeasurementsResponseDTO:
     try:
         query = GetBodyMeasurementsQuery(uow)

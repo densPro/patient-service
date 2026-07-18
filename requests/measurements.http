@@ -1,0 +1,167 @@
+### Patient Management Service — Body Measurement Endpoints
+### Requires: REST Client extension (humao.rest-client)
+### Only "admin", "doctor", and "nurse" roles can record measurements.
+### All authenticated users can read measurement history.
+###
+### IMPORTANT: You need a valid patientId before recording measurements.
+###            Run patients.http first to create a patient and get its UUID.
+
+@baseUrl   = http://localhost:8001
+@token     = PASTE_YOUR_ACCESS_TOKEN_HERE
+@staffToken = PASTE_DOCTOR_OR_NURSE_ACCESS_TOKEN_HERE
+@patientId = PASTE_PATIENT_UUID_HERE
+
+
+# ══════════════════════════════════════════════════════════════════
+# POST /api/v1/patients/{patient_id}/measurements  — Record measurement
+# ══════════════════════════════════════════════════════════════════
+
+### 1. Record a full body measurement (height + weight + waist + hip)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "height_cm": 175.0,
+  "weight_kg": 72.5,
+  "waist_cm": 85.0,
+  "hip_cm": 98.0,
+  "measured_at": "2026-07-17T10:00:00Z"
+}
+
+###
+
+### 2. Record only weight (partial measurement — at least one field required)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "weight_kg": 74.2,
+  "measured_at": "2026-07-17T14:30:00Z"
+}
+
+###
+
+### 3. Record only height and weight — no measured_at (defaults to now)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "height_cm": 175.0,
+  "weight_kg": 71.8
+}
+
+###
+
+### 4. Record with waist and hip only (for waist-hip ratio)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "waist_cm": 83.5,
+  "hip_cm": 96.0,
+  "measured_at": "2026-07-10T09:00:00Z"
+}
+
+###
+
+### 5. Record measurement — expect 404 Not Found (invalid patient UUID)
+POST {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000000/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "weight_kg": 70.0
+}
+
+###
+
+### 6. Record measurement — expect 401 Unauthorized (missing token)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+
+{
+  "weight_kg": 70.0
+}
+
+###
+
+### 7. Record measurement — expect 403 Forbidden (receptionist token)
+### Login as receptionist user and paste token below
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer RECEPTIONIST_TOKEN_HERE
+
+{
+  "weight_kg": 70.0
+}
+
+###
+
+### 8. Record measurement — expect 422 Unprocessable Entity (no measurement fields)
+POST {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "measured_at": "2026-07-17T10:00:00Z"
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/patients/{patient_id}/measurements/latest
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 9. Get latest body measurement for a patient
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements/latest
+Authorization: Bearer {{token}}
+
+###
+
+### 10. Get latest measurement — expect 404 Not Found (patient has no measurements)
+GET {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000000/measurements/latest
+Authorization: Bearer {{token}}
+
+###
+
+### 11. Get latest measurement — expect 401 Unauthorized (missing token)
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements/latest
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/patients/{patient_id}/measurements  — Full history
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 12. List all measurements — default pagination (limit=20, offset=0)
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements
+Authorization: Bearer {{token}}
+
+###
+
+### 13. List measurements with custom pagination
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements?limit=5&offset=0
+Authorization: Bearer {{token}}
+
+###
+
+### 14. List measurements — page 2
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements?limit=5&offset=5
+Authorization: Bearer {{token}}
+
+###
+
+### 15. List measurements — expect 404 Not Found (invalid patient UUID)
+GET {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000000/measurements
+Authorization: Bearer {{token}}
+
+###
+
+### 16. List measurements — expect 401 Unauthorized (missing token)
+GET {{baseUrl}}/api/v1/patients/{{patientId}}/measurements

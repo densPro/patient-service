@@ -6,6 +6,8 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.auth import get_current_user, require_role
+
 from app.application.commands.create_doctor import CreateDoctorCommand
 from app.application.commands.update_doctor import UpdateDoctorCommand
 from app.application.commands.deactivate_doctor import DeactivateDoctorCommand
@@ -48,6 +50,7 @@ logger = get_logger(__name__)
 async def create_doctor(
     dto: DoctorCreateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> DoctorResponseDTO:
     logger.debug(
         "create_doctor request received",
@@ -91,6 +94,7 @@ async def search_doctors(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> PaginatedDoctorsResponseDTO:
     search_dto = DoctorSearchDTO(
         first_name=first_name,
@@ -123,6 +127,7 @@ async def search_doctors(
 async def get_doctor_by_id(
     doctor_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> DoctorResponseDTO:
     try:
         query = GetDoctorQuery(uow)
@@ -144,6 +149,7 @@ async def get_doctor_by_id(
 async def get_doctor_by_employee_id(
     employee_id: str,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> DoctorResponseDTO:
     try:
         query = GetDoctorQuery(uow)
@@ -169,6 +175,7 @@ async def update_doctor(
     doctor_id: uuid.UUID,
     dto: DoctorUpdateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> DoctorResponseDTO:
     logger.debug("update_doctor request", extra={"doctor_id": str(doctor_id)})
     try:
@@ -207,6 +214,7 @@ async def update_doctor(
 async def deactivate_doctor(
     doctor_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> DoctorResponseDTO:
     logger.debug("deactivate_doctor request", extra={"doctor_id": str(doctor_id)})
     try:

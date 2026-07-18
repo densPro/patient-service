@@ -1,0 +1,324 @@
+### Patient Management Service — Patient Endpoints
+### Requires: REST Client extension (humao.rest-client)
+### Workflow: Login via identity-service first, paste the access_token into @token below.
+
+@baseUrl    = http://localhost:8001
+@token      = PASTE_YOUR_ACCESS_TOKEN_HERE
+@patientId  = PASTE_PATIENT_UUID_HERE
+@mrn        = PASTE_MRN_HERE
+
+# ══════════════════════════════════════════════════════════════════
+# POST /api/v1/patients  — Create a new patient
+# ══════════════════════════════════════════════════════════════════
+
+### 1. Create patient — minimal required fields
+POST {{baseUrl}}/api/v1/patients
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "María",
+  "last_name": "García",
+  "date_of_birth": "1990-05-15",
+  "gender": "female",
+  "contact_info": {
+    "phone_number": "+1-555-123-4567",
+    "email": "maria.garcia@example.com"
+  }
+}
+
+###
+
+### 2. Create patient — full payload with all optional fields
+POST {{baseUrl}}/api/v1/patients
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Carlos",
+  "last_name": "Mendoza",
+  "date_of_birth": "1985-11-20",
+  "gender": "male",
+  "marital_status": "married",
+  "ssn_last_four": "5678",
+  "national_id": "DOC-987654",
+  "blood_type": "O+",
+  "allergies": ["Penicillin", "Sulfa drugs"],
+  "chronic_conditions": ["Hypertension", "Type 2 Diabetes"],
+  "contact_info": {
+    "phone_number": "+1-555-987-6543",
+    "email": "carlos.mendoza@example.com",
+    "secondary_phone": "+1-555-111-2222"
+  },
+  "address": {
+    "street_line_1": "123 Main Street",
+    "street_line_2": "Apt 4B",
+    "city": "Miami",
+    "state": "FL",
+    "postal_code": "33101",
+    "country": "US"
+  },
+  "emergency_contact": {
+    "full_name": "Rosa Mendoza",
+    "relationship": "Spouse",
+    "phone_number": "+1-555-444-5555",
+    "email": "rosa.mendoza@example.com"
+  },
+  "insurance_info": {
+    "provider_name": "BlueCross BlueShield",
+    "policy_number": "BCBS-2025-001",
+    "group_number": "GRP-999",
+    "subscriber_name": "Carlos Mendoza",
+    "subscriber_relationship": "Self",
+    "effective_date": "2025-01-01",
+    "expiration_date": "2025-12-31"
+  },
+  "notes": "Patient prefers morning appointments."
+}
+
+###
+
+### 3. Create patient — expect 409 Conflict (duplicate based on name + DOB)
+POST {{baseUrl}}/api/v1/patients
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "María",
+  "last_name": "García",
+  "date_of_birth": "1990-05-15",
+  "gender": "female",
+  "contact_info": {
+    "phone_number": "+1-555-123-4567"
+  }
+}
+
+###
+
+### 4. Create patient — expect 401 Unauthorized (missing token)
+POST {{baseUrl}}/api/v1/patients
+Content-Type: application/json
+
+{
+  "first_name": "Test",
+  "last_name": "NoAuth",
+  "date_of_birth": "2000-01-01",
+  "gender": "unknown",
+  "contact_info": {
+    "phone_number": "+1-555-000-0000"
+  }
+}
+
+###
+
+### 5. Create patient — expect 422 Unprocessable Entity (missing required contact_info)
+POST {{baseUrl}}/api/v1/patients
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Bad",
+  "last_name": "Request",
+  "date_of_birth": "1995-06-01",
+  "gender": "female"
+}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/patients/{patient_id}  — Get patient by UUID
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 6. Get patient by UUID — replace patientId variable at the top
+GET {{baseUrl}}/api/v1/patients/{{patientId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 7. Get patient by UUID — expect 404 Not Found
+GET {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+###
+
+### 8. Get patient by UUID — expect 401 Unauthorized (missing token)
+GET {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000001
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/patients/mrn/{mrn}  — Get patient by MRN
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 9. Get patient by MRN — replace mrn variable at the top
+GET {{baseUrl}}/api/v1/patients/mrn/{{mrn}}
+Authorization: Bearer {{token}}
+
+###
+
+### 10. Get patient by MRN — expect 404 Not Found
+GET {{baseUrl}}/api/v1/patients/mrn/MRN-DOES-NOT-EXIST
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# GET /api/v1/patients  — Search / list patients
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 11. Search all patients — default pagination (limit=20, offset=0)
+GET {{baseUrl}}/api/v1/patients
+Authorization: Bearer {{token}}
+
+###
+
+### 12. Search by first name
+GET {{baseUrl}}/api/v1/patients?first_name=María
+Authorization: Bearer {{token}}
+
+###
+
+### 13. Search by last name
+GET {{baseUrl}}/api/v1/patients?last_name=García
+Authorization: Bearer {{token}}
+
+###
+
+### 14. Search by first name + last name
+GET {{baseUrl}}/api/v1/patients?first_name=Carlos&last_name=Mendoza
+Authorization: Bearer {{token}}
+
+###
+
+### 15. Search by date of birth
+GET {{baseUrl}}/api/v1/patients?date_of_birth=1985-11-20
+Authorization: Bearer {{token}}
+
+###
+
+### 16. Search by MRN
+GET {{baseUrl}}/api/v1/patients?mrn={{mrn}}
+Authorization: Bearer {{token}}
+
+###
+
+### 17. Filter by status (active | inactive | deceased | transferred)
+GET {{baseUrl}}/api/v1/patients?status=active
+Authorization: Bearer {{token}}
+
+###
+
+### 18. Search with custom pagination — page 2
+GET {{baseUrl}}/api/v1/patients?limit=10&offset=10
+Authorization: Bearer {{token}}
+
+###
+
+### 19. Combined search with all filters
+GET {{baseUrl}}/api/v1/patients?first_name=Carlos&status=active&limit=5&offset=0
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PATCH /api/v1/patients/{patient_id}  — Partial update
+# ══════════════════════════════════════════════════════════════════
+
+###
+
+### 20. Update patient contact info
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "contact_info": {
+    "phone_number": "+1-555-999-8888",
+    "email": "updated.email@example.com"
+  }
+}
+
+###
+
+### 21. Update patient allergies and notes
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "allergies": ["Penicillin", "Aspirin", "Latex"],
+  "chronic_conditions": ["Hypertension"],
+  "notes": "Updated note: patient transferred to specialist."
+}
+
+###
+
+### 22. Update patient status to inactive
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "inactive"
+}
+
+###
+
+### 23. Update patient address
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "address": {
+    "street_line_1": "456 New Ave",
+    "city": "Orlando",
+    "state": "FL",
+    "postal_code": "32801",
+    "country": "US"
+  }
+}
+
+###
+
+### 24. Update patient insurance info
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "insurance_info": {
+    "provider_name": "Aetna",
+    "policy_number": "AETNA-2026-777",
+    "group_number": "GRP-200",
+    "subscriber_name": "Carlos Mendoza",
+    "subscriber_relationship": "Self",
+    "effective_date": "2026-01-01",
+    "expiration_date": "2026-12-31"
+  }
+}
+
+###
+
+### 25. Update patient — expect 404 Not Found
+PATCH {{baseUrl}}/api/v1/patients/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "notes": "This patient does not exist."
+}
+
+###
+
+### 26. Update patient — expect 403 Forbidden (receptionist role trying to update)
+### Login as receptionist user and use that token here
+PATCH {{baseUrl}}/api/v1/patients/{{patientId}}
+Content-Type: application/json
+Authorization: Bearer RECEPTIONIST_TOKEN_HERE
+
+{
+  "notes": "Should be rejected."
+}

@@ -6,6 +6,8 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.auth import get_current_user, require_role
+
 from app.application.commands.create_specialty import CreateSpecialtyCommand
 from app.application.commands.update_specialty import UpdateSpecialtyCommand
 from app.application.commands.deactivate_specialty import DeactivateSpecialtyCommand
@@ -40,6 +42,7 @@ logger = get_logger(__name__)
 async def create_specialty(
     dto: SpecialtyCreateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> SpecialtyResponseDTO:
     try:
         command = CreateSpecialtyCommand(uow)
@@ -64,6 +67,7 @@ async def create_specialty(
 async def list_specialties(
     active_only: bool = Query(False, description="If true, only return active specialties."),
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> list[SpecialtyResponseDTO]:
     query = GetSpecialtyQuery(uow)
     return await query.list_all(active_only=active_only)
@@ -81,6 +85,7 @@ async def list_specialties(
 async def get_specialty_by_id(
     specialty_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> SpecialtyResponseDTO:
     try:
         query = GetSpecialtyQuery(uow)
@@ -101,6 +106,7 @@ async def get_specialty_by_id(
 async def get_specialty_by_code(
     code: str,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(get_current_user),
 ) -> SpecialtyResponseDTO:
     try:
         query = GetSpecialtyQuery(uow)
@@ -122,6 +128,7 @@ async def update_specialty(
     specialty_id: uuid.UUID,
     dto: SpecialtyUpdateDTO,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> SpecialtyResponseDTO:
     try:
         command = UpdateSpecialtyCommand(uow)
@@ -146,6 +153,7 @@ async def update_specialty(
 async def deactivate_specialty(
     specialty_id: uuid.UUID,
     uow=Depends(get_unit_of_work),
+    _user: dict = Depends(require_role("admin")),
 ) -> SpecialtyResponseDTO:
     try:
         command = DeactivateSpecialtyCommand(uow)

@@ -97,3 +97,22 @@ class InvalidDoctorDataError(PatientManagementError):
     def __init__(self, detail: str) -> None:
         super().__init__(f"Invalid doctor data: {detail}")
         self.detail = detail
+
+
+# ---------------------------------------------------------------------------
+# Auth / Token exceptions
+# ---------------------------------------------------------------------------
+
+
+class TokenExpiredError(PatientManagementError):
+    """Raised when a JWT access token has expired."""
+
+    def __init__(self) -> None:
+        super().__init__("Token has expired.")
+
+
+class TokenInvalidError(PatientManagementError):
+    """Raised when a JWT token cannot be decoded (bad signature, malformed, etc.)."""
+
+    def __init__(self, detail: str = "Invalid token.") -> None:
+        super().__init__(detail)
